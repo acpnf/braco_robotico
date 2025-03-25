@@ -1,2 +1,2 @@
-# bra-o-rob-tico
+# braço robótico
 Trabalho de IC
