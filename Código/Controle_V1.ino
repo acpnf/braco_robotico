@@ -1,5 +1,6 @@
-//Bibliotecas importadas
 
+
+//Bibliotecas importadas
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <SPI.h>
@@ -22,6 +23,11 @@ const int potenciometro_horizo_A1 = 15;
 int x = 0;
 int y = 0;
 
+
+RF24 radio(7, 8); // CE, CSN]
+const byte address[6] = "01987";
+
+
 //Declaração das funções
 
 void displayMenu();
@@ -42,6 +48,12 @@ void setup() {
   pinMode(botao_superior, INPUT);
 
   displayMenu();
+
+
+    radio.begin();
+    radio.openReadingPipe(0, address);
+    radio.setPALevel(RF24_PA_MIN);
+    radio.startListening();
 }
 
 //Funções criadas para realizar interações com o usuário e envio de dados para o braço mecânico
