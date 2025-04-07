@@ -1,6 +1,7 @@
 
 
 //Bibliotecas importadas
+#include <Arduino.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <SPI.h>
@@ -16,10 +17,10 @@ LiquidCrystal_I2C lcd(0x27, 4, 20);
 
 const int botao_esquerdo = 5;
 const int botao_direito = 6;
-const int potenciometro_esquerdo_verti_A0 = 14;
-const int potenciometro_esquerdo_horizo_A1 = 15; 
-const int potenciometro_direito_verti_A2 = 16;
-const int potenciometro_direito_horizo_A3 = 17;
+const int botao_superior = 7;
+const int botao_inferior = 8;
+const int potenciometro_verti_A0 = 14;
+const int potenciometro_horizo_A1 = 15; 
 int x = 0;
 int y = 0;
 
@@ -36,15 +37,58 @@ void selec_dificul();
 
 //Main
 
+
+void iniciar_jogo(int dificuldade){
+
+lcd.clear();
+lcd.setCursor(0,0);
+lcd.print("Iniciando o jogo");
+for(int i = 0; i < 3; i++){
+    lcd.setCursor(16+i,0);
+    lcd.print(".");
+    delay(1000);
+}
+
+lcd.clear();
+
+if (dificuldade == 0){
+    for (int i=200; i > 0; i-- ){
+        lcd.setCursor(0, 0);
+        lcd.print(i);
+        delay(1000);
+    }
+
+
+} else if (dificuldade == 1){
+    for (int i=250; i > 0; i-- ){
+        lcd.setCursor(0, 0);
+        lcd.print(i);
+        delay(1000);
+
+    }
+
+
+} else if (dificuldade == 2){
+    for (int i=300; i > 0; i-- ){
+        lcd.setCursor(0, 0);
+        lcd.print(i);
+        delay(1000);
+
+    }
+
+
+}}
+
 void setup() {
   lcd.init();
   lcd.backlight();
   Serial.begin(9600);
 
-  pinMode(potenciometro_esquerdo_verti_A0, INPUT);
-  pinMode(potenciometro_esquerdo_horizo_A1, INPUT);
+  pinMode(potenciometro_verti_A0, INPUT);
+  pinMode(potenciometro_horizo_A1, INPUT);
   pinMode(botao_esquerdo, INPUT);
   pinMode(botao_direito, INPUT);
+  pinMode(botao_superior, INPUT);
 
   displayMenu();
 
@@ -79,7 +123,7 @@ void displayMenu() {
 
   while (escolha == false){
 
-    y = analogRead(potenciometro_esquerdo_horizo_A1);
+    y = analogRead(potenciometro_horizo_A1);
 
     if (y < 495) {
       lcd.setCursor(0, 0);
@@ -140,14 +184,11 @@ void selec_dificul() {
   //ciclo para escolha da dificuldade e animação do display
 
   while(esc == false){
+    dificuldade = 1;
 
-    if (digitalRead(botao_esquerdo) == LOW){
-      esc = true;
-      iniciar_jogo(dificuldade);
+    iniciar_jogo(dificuldade);    
 
-    }
-
-    y = analogRead(potenciometro_esquerdo_horizo_A1);
+    y = analogRead(potenciometro_horizo_A1);
     Serial.print(y);
     Serial.print("     ");
     Serial.println(estado_botao_esquerdo);
@@ -240,61 +281,3 @@ void selec_dificul() {
     }
   }   
 }
-
-
-
-
-void iniciar_jogo(int dificuldade){
-
-  int base_horizo = analogRead(potenciometro_esquerdo_horizo_A1);
-  int base_verti = analogRead(potenciometro_esquerdo_verti_A0);
-  int mao_horizo = analogRead(potenciometro_direito_horizo_A3);
-  int mao_verti = analogRead(potenciometro_direito_verti_A2);
-
-  radio.write(&base_horizo, sizeof(base_horizo));
-  delay(100);
-  radio.write(&base_verti, sizeof(base_verti));
-  delay(100);
-  radio.write(&mao_horizo, sizeof(mao_horizo));
-  delay(100);
-  radio.write(&mao_verti, sizeof(mao_verti));
-  delay(100);
-
-  lcd.clear();
-  lcd.setCursor(0,0);
-  lcd.print("Iniciando o jogo");
-  for(int i = 0; i < 3; i++){
-      lcd.setCursor(16+i,0);
-      lcd.print(".");
-      delay(1000);
-  }
-
-  if (dificuldade == 0){
-      for (int i=200; i > 0; i-- ){
-          lcd.setCursor(0, 0);
-          lcd.print(i);
-          delay(1000);
-      }
-
-
-  } else if (dificuldade == 1){
-      for (int i=250; i > 0; i-- ){
-          lcd.setCursor(0, 0);
-          lcd.print(i);
-          delay(1000);
-
-      }
-
-
-  } else if (dificuldade == 2){
-      for (int i=300; i > 0; i-- ){
-          lcd.setCursor(0, 0);
-          lcd.print(i);
-          delay(1000);
-
-      }
-
-
-  }}
-
-
