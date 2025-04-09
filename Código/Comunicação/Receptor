@@ -1,0 +1,48 @@
+#include <WiFi.h>
+#include <esp_now.h>
+#include "esp_wifi.h"
+
+typedef struct {
+  int numero;
+  char comando[20];
+} struct_message;
+
+struct_message msg;
+
+void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+  Serial.println("⚡ Dados recebidos via Wi-Fi!");
+  memcpy(&msg, incomingData, sizeof(msg));
+
+  Serial.print("📥 Recebido: ");
+  Serial.print(msg.numero);
+  Serial.print(",");
+  Serial.println(msg.comando);
+
+  // Envia para o Arduino (quando conectado à Serial2)
+  Serial2.print(msg.numero);
+  Serial2.print(",");
+  Serial2.println(msg.comando);
+}
+
+void setup() {
+  Serial.begin(115200); // Monitor serial do PC
+  Serial2.begin(9600, SERIAL_8N1, 16, 17); // GPIO17 (TX), GPIO16 (RX)
+
+  WiFi.mode(WIFI_STA);
+
+  // Define canal fixo
+  esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
+
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Erro ao iniciar ESP-NOW");
+    return;
+  }
+
+  esp_now_register_recv_cb(OnDataRecv);
+  Serial.println("🔎 Aguardando mensagens via ESP-NOW...");
+}
+
+void loop() {
+  delay(2000);
+  Serial.println("⏳ Esperando mensagem...");
+}
