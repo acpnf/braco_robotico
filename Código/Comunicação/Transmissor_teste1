@@ -1,0 +1,64 @@
+#include <WiFi.h>
+#include <esp_now.h>
+
+typedef struct {
+  int numero;
+  char comando[20];
+} struct_message;
+
+struct_message msg;
+uint8_t receiverMAC[] = {0x7C, 0x9E, 0xBD, 0xF5, 0x06, 0x84}; // MAC do ESP receptor
+
+void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+  Serial.print("📤 Status do envio: ");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "✅ Sucesso" : "❌ Falha");
+}
+
+void setup() {
+  Serial.begin(115200); // Para debug
+  delay(1000); // Esperar a Serial conectar
+
+  Serial2.begin(9600, SERIAL_8N1, 16, 17); // Recebe do Arduino via GPIO16 (RX)
+
+  WiFi.mode(WIFI_STA);
+
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("❌ Erro ao iniciar ESP-NOW");
+    return;
+  }
+
+  esp_now_register_send_cb(OnDataSent);
+
+  esp_now_peer_info_t peerInfo = {};
+  memcpy(peerInfo.peer_addr, receiverMAC, 6);
+  peerInfo.channel = 0;
+  peerInfo.encrypt = false;
+
+  if (esp_now_add_peer(&peerInfo)) {
+    Serial.println("❌ Falha ao adicionar peer");
+  } else {
+    Serial.println("✅ Peer adicionado com sucesso");
+  }
+}
+
+void loop() {
+  if (Serial2.available()) {
+    String recebido = Serial2.readStringUntil('\n');
+
+    int sep = recebido.indexOf(',');
+    if (sep != -1) {
+      msg.numero = recebido.substring(0, sep).toInt();
+      String comando = recebido.substring(sep + 1);
+      comando.trim();
+      comando.toCharArray(msg.comando, sizeof(msg.comando));
+
+      // Envia via ESP-NOW
+      esp_now_send(receiverMAC, (uint8_t *)&msg, sizeof(msg));
+
+      Serial.print("📨 Enviado via Wi-Fi: ");
+      Serial.print(msg.numero);
+      Serial.print(", ");
+      Serial.println(msg.comando);
+    }
+  }
+}
