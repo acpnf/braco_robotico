@@ -1,0 +1,15 @@
+#include "WiFi.h"
+
+void setup() {
+  Serial.begin(115200);
+  // Espera a serial conectar (caso esteja usando o monitor serial)
+  delay(1000);
+  
+  // Imprime o endereço MAC
+  Serial.print("Endereço MAC do ESP32: ");
+  Serial.println(WiFi.macAddress());
+}
+
+void loop() {
+  // Nada aqui
+}
