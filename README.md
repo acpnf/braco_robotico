@@ -68,4 +68,7 @@ Modificamos as modalidades de dificuldade com o intuito de se encaixar mais na d
 Módulo de comunicação sem fio trocamos por comunicação Serial entre arduinos
 
 ## O que não foi implementado e por quê:
-O NRF não chegou a ser implementado no resultado final do trabalho pela a equipe devido a dificuldade de implementação
+O NRF não chegou a ser implementado no resultado final do trabalho pela a equipe devido a dificuldade de implementação.
+Não conseguimos completar o projeto, pois houve um grande problema na parte da comunicação sem fio, o que nos obrigou a utilizar a comunicação serial entre os arduinos, além de consumir muito tempo.
+Houve muito ruído no joystick, o que impossibilitou o trabalho de se completar
+
