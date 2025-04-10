@@ -4,9 +4,6 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-#include <SPI.h>
-#include <nRF24L01.h>
-#include <RF24.h>
 #include <Servo.h>
 
 //Configuração inicial do display
@@ -17,17 +14,12 @@ LiquidCrystal_I2C lcd(0x27, 4, 20);
 
 const int botao_esquerdo = 5;
 const int botao_direito = 6;
-const int botao_superior = 7;
-const int botao_inferior = 8;
-const int potenciometro_verti_A0 = 14;
-const int potenciometro_horizo_A1 = 15; 
+const int potenciometro_esquerdo_verti_A0 = 14;
+const int potenciometro_esquerdo_horizo_A1 = 15;
+const int potenciometro_direito_verti_A2 = 16;
+const int potenciometro_direito_horizo_A3 = 17;
 int x = 0;
 int y = 0;
-
-
-RF24 radio(7, 8); // CE, CSN]
-const byte address[6] = "01987";
-
 
 //Declaração das funções
 
@@ -60,10 +52,23 @@ if (dificuldade == 0){
 
 
 } else if (dificuldade == 1){
-    for (int i=250; i > 0; i-- ){
+    for (int i=250; i >= 0; i-- ){
         lcd.setCursor(0, 0);
         lcd.print(i);
         delay(1000);
+
+        Serial.println(digitalRead(botao_direito));
+        Serial.println(digitalRead(botao_esquerdo));
+        Serial.println(analogRead(potenciometro_esquerdo_verti_A0));
+        Serial.println(analogRead(potenciometro_esquerdo_horizo_A1));
+        Serial.println(analogRead(potenciometro_direito_verti_A2));
+        Serial.println(analogRead(potenciometro_direito_horizo_A3));
+
+        if ( i == 0){
+          lcd.print("acabou o tempo!");
+          break;
+
+        }
 
     }
 
@@ -76,7 +81,6 @@ if (dificuldade == 0){
 
     }
 
-
 }}
 
 void setup() {
@@ -84,19 +88,15 @@ void setup() {
   lcd.backlight();
   Serial.begin(9600);
 
-  pinMode(potenciometro_verti_A0, INPUT);
-  pinMode(potenciometro_horizo_A1, INPUT);
+  pinMode(potenciometro_esquerdo_verti_A0, INPUT);
+  pinMode(potenciometro_esquerdo_horizo_A1, INPUT);
+  pinMode(potenciometro_direito_verti_A2, INPUT);
+  pinMode(potenciometro_direito_horizo_A3, INPUT);
   pinMode(botao_esquerdo, INPUT);
   pinMode(botao_direito, INPUT);
-  pinMode(botao_superior, INPUT);
+  
 
   displayMenu();
-
-
-    radio.begin();
-    radio.openReadingPipe(0, address);
-    radio.setPALevel(RF24_PA_MIN);
-    radio.startListening();
 }
 
 //Funções criadas para realizar interações com o usuário e envio de dados para o braço mecânico
@@ -123,7 +123,7 @@ void displayMenu() {
 
   while (escolha == false){
 
-    y = analogRead(potenciometro_horizo_A1);
+    y = analogRead(potenciometro_esquerdo_horizo_A1);
 
     if (y < 495) {
       lcd.setCursor(0, 0);
@@ -160,20 +160,6 @@ void displayMenu() {
 
 void selec_dificul() {
 
-  //Configuração do display
-
-  lcd.setCursor(0, 0); // Linha 1
-  lcd.print("Selecione:");
-  
-  lcd.setCursor(0, 1); // Linha 2
-  lcd.print("> Facil");
-
-  lcd.setCursor(0, 2); // Linha 3
-  lcd.print("  Medio");
-
-  lcd.setCursor(0, 3); // Linha 4
-  lcd.print("  Dificil");
-
   //Variáveis úteis para está função
 
   bool estado_botao_esquerdo = false;
@@ -188,7 +174,7 @@ void selec_dificul() {
 
     iniciar_jogo(dificuldade);    
 
-    y = analogRead(potenciometro_horizo_A1);
+    y = analogRead(potenciometro_esquerdo_horizo_A1);
     Serial.print(y);
     Serial.print("     ");
     Serial.println(estado_botao_esquerdo);
