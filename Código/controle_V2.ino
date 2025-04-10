@@ -1,128 +1,49 @@
-
-
-//Bibliotecas importadas
-#include <Arduino.h>
-#include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-#include <Servo.h>
 
-//Configuração inicial do display
-
-LiquidCrystal_I2C lcd(0x27, 4, 20);
-
-//Declaração das Variáveis
-
+// Definições de pinos
 const int botao_esquerdo = 5;
 const int botao_direito = 6;
-const int potenciometro_esquerdo_verti_A0 = 14;
-const int potenciometro_esquerdo_horizo_A1 = 15;
-const int potenciometro_direito_verti_A2 = 16;
-const int potenciometro_direito_horizo_A3 = 17;
+const int potenciometro_esquerdo_verti_A0 = A0;
+const int potenciometro_esquerdo_horizo_A1 = A1;
+const int potenciometro_direito_verti_A2 = A2;
+const int potenciometro_direito_horizo_A3 = A3;
+
+// Definição do LCD
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // Endereço I2C do LCD
+
+// Variáveis de controle
 int x = 0;
 int y = 0;
-
-//Declaração das funções
-
-void displayMenu();
-//void iniciar_jogo(int diculdade);
-void selec_dificul();
-
-//Main
-
-
-void iniciar_jogo(int dificuldade){
-
-lcd.clear();
-lcd.setCursor(0,0);
-lcd.print("Iniciando o jogo");
-for(int i = 0; i < 3; i++){
-    lcd.setCursor(16+i,0);
-    lcd.print(".");
-    delay(1000);
-}
-
-lcd.clear();
-
-if (dificuldade == 0){
-    for (int i=200; i > 0; i-- ){
-        lcd.setCursor(0, 0);
-        lcd.print(i);
-        delay(1000);
-    }
-
-
-} else if (dificuldade == 1){
-    for (int i=250; i >= 0; i-- ){
-        lcd.setCursor(0, 0);
-        lcd.print(i);
-        delay(1000);
-
-        Serial.println(digitalRead(botao_direito));
-        Serial.println(digitalRead(botao_esquerdo));
-        Serial.println(analogRead(potenciometro_esquerdo_verti_A0));
-        Serial.println(analogRead(potenciometro_esquerdo_horizo_A1));
-        Serial.println(analogRead(potenciometro_direito_verti_A2));
-        Serial.println(analogRead(potenciometro_direito_horizo_A3));
-
-        if ( i == 0){
-          lcd.print("acabou o tempo!");
-          break;
-
-        }
-
-    }
-
-
-} else if (dificuldade == 2){
-    for (int i=300; i > 0; i-- ){
-        lcd.setCursor(0, 0);
-        lcd.print(i);
-        delay(1000);
-
-    }
-
-}}
+int selecao = 0;
+bool escolha = false;
+bool estado_botao_esquerdo_1 = false;
 
 void setup() {
-  lcd.init();
-  lcd.backlight();
-  Serial.begin(9600);
+  Serial.begin(9600);  // Inicializa a comunicação serial para debug
 
-  pinMode(potenciometro_esquerdo_verti_A0, INPUT);
-  pinMode(potenciometro_esquerdo_horizo_A1, INPUT);
-  pinMode(potenciometro_direito_verti_A2, INPUT);
-  pinMode(potenciometro_direito_horizo_A3, INPUT);
+  // Configura os pinos de entrada
   pinMode(botao_esquerdo, INPUT);
   pinMode(botao_direito, INPUT);
-  
+
+  // Inicializa o LCD
+  lcd.init();
+  lcd.backlight();
 
   displayMenu();
 }
 
-//Funções criadas para realizar interações com o usuário e envio de dados para o braço mecânico
-
-//A função a baico inicia o menu
-
+// Função para exibir o menu de seleção
 void displayMenu() { 
-  //Configurações iniciais do display
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Selecione uma opcao:");
   lcd.setCursor(0, 1);
   lcd.print("> jogar");
   lcd.setCursor(0, 2);
-  lcd.print("  ranking");
+  lcd.print("  Modo Livre");
 
-  //Variáveis úteis para está função
-
-  int selecao = 0;
-  bool escolha = false;
-  bool estado_botao_esquerdo_1 = false;
-
-  //Ciclo para escolher entre jogar e olhar o ranking.
-
-  while (escolha == false){
-
+  // Loop de escolha de opção
+  while (escolha == false) {
     y = analogRead(potenciometro_esquerdo_horizo_A1);
 
     if (y < 495) {
@@ -131,7 +52,7 @@ void displayMenu() {
       lcd.setCursor(0, 1);
       lcd.print("> jogar");
       lcd.setCursor(0, 2);
-      lcd.print("  ranking");
+      lcd.print("  Modo Livre");
       selecao = 0;
     } else if (y > 515) {
       lcd.setCursor(0, 0);
@@ -139,131 +60,71 @@ void displayMenu() {
       lcd.setCursor(0, 1);
       lcd.print("  jogar");
       lcd.setCursor(0, 2);
-      lcd.print("> ranking");
+      lcd.print("> Modo Livre");
       selecao = 1;
-      }
+    }
+
     estado_botao_esquerdo_1 = digitalRead(botao_esquerdo);
-    if (estado_botao_esquerdo_1){
-      escolha == true;
+    if (estado_botao_esquerdo_1) {
+      escolha = true;
       lcd.clear();
-      if(selecao == 0){
-        selec_dificul();
+      if (selecao == 0) {
+        Serial.println("Jogo Iniciado");
       } else {
         lcd.setCursor(0, 0);
-        lcd.print("esc. ranking");
+        modolivre();
       }
     } 
   }
 }
 
-//Função para seleção da dificuldade
+// Função para o modo livre
+void modolivre() {
+  int parou = 1; 
+  while(parou == 1) {
+    int a_esquerdo = analogRead(potenciometro_esquerdo_verti_A0);
+    int b_esquerdo = analogRead(potenciometro_esquerdo_horizo_A1);
+    int c_direito = analogRead(potenciometro_direito_verti_A2);
+    int d_direito = analogRead(potenciometro_direito_horizo_A3);
 
-void selec_dificul() {
-
-  //Variáveis úteis para está função
-
-  bool estado_botao_esquerdo = false;
-  int dificuldade = 0;
-  int cursor = 0;
-  bool esc = false;
-
-  //ciclo para escolha da dificuldade e animação do display
-
-  while(esc == false){
-    dificuldade = 1;
-
-    iniciar_jogo(dificuldade);    
-
-    y = analogRead(potenciometro_esquerdo_horizo_A1);
-    Serial.print(y);
-    Serial.print("     ");
-    Serial.println(estado_botao_esquerdo);
-      
-    if (y > 515){
-
-      if(cursor == 0){
-        cursor = 1;
-        lcd.setCursor(0, 1); // Linha 2
-        lcd.print("  Facil");
-
-        lcd.setCursor(0, 2); // Linha 3
-        lcd.print("> Medio");
-    
-        lcd.setCursor(0, 3); // Linha 4
-        lcd.print("  Dificil");
-
-        dificuldade = 1;
-        delay(200);
-      } else if(cursor == 1){
-        cursor = 2;
-        lcd.setCursor(0, 1); // Linha 2
-        lcd.print("  Facil");
-
-        lcd.setCursor(0, 2); // Linha 3
-        lcd.print("  Medio");
-    
-        lcd.setCursor(0, 3); // Linha 4
-        lcd.print("> Dificil");
-
-        dificuldade = 2;
-        delay(200);
-      } else if(cursor == 2){
-        cursor = 0;
-        lcd.setCursor(0, 1); // Linha 2
-        lcd.print("> Facil");
-
-        lcd.setCursor(0, 2); // Linha 3
-        lcd.print("  Medio");
-    
-        lcd.setCursor(0, 3); // Linha 4
-        lcd.print("  Dificil");
-
-        dificuldade = 0;
-        delay(200);
-      }
+    if (a_esquerdo < 500) {
+      Serial.print("1");
+      Serial.print(",");
+      Serial.println(a_esquerdo);
+    } else if (a_esquerdo > 530) {
+      Serial.print("1");
+      Serial.print(",");
+      Serial.println(a_esquerdo);
+    } else if (b_esquerdo < 500) {
+      Serial.print("2");
+      Serial.print(",");
+      Serial.println(b_esquerdo);
+    } else if (b_esquerdo > 518) {
+      Serial.print("2");
+      Serial.print(",");
+      Serial.println(b_esquerdo);
+    } else if (c_direito < 515) {
+      Serial.print("3");
+      Serial.print(",");
+      Serial.println(c_direito);
+    } else if (c_direito > 540) {
+      Serial.print("3");
+      Serial.print(",");
+      Serial.println(c_direito);
+    } else if (d_direito < 495) {
+      Serial.print("4");
+      Serial.print(",");
+      Serial.println(d_direito);
+    } else if (d_direito > 520) {
+      Serial.print("4");
+      Serial.print(",");
+      Serial.println(d_direito);
+    } else {
+      Serial.println("0");
     }
-    if(y < 495){
+  }
+}
 
-      if(cursor == 0){
-        cursor = 1;
-        lcd.setCursor(0, 1); // Linha 2
-        lcd.print("  Facil");
-
-        lcd.setCursor(0, 2); // Linha 3
-        lcd.print("  Medio");
-    
-        lcd.setCursor(0, 3); // Linha 4
-        lcd.print("> Dificil");
-
-        dificuldade = 1;
-        delay(200);
-      } else if(cursor == 1){
-        cursor = 2;
-        lcd.setCursor(0, 1); // Linha 2
-        lcd.print("  Facil");
-
-        lcd.setCursor(0, 2); // Linha 3
-        lcd.print("> Medio");
-    
-        lcd.setCursor(0, 3); // Linha 4
-        lcd.print("  Dificil");
-
-        dificuldade = 2;
-        delay(200);
-      } else if(cursor == 2){
-        cursor = 0;
-        lcd.setCursor(0, 1); // Linha 2
-        lcd.print("> Facil");
-
-        lcd.setCursor(0, 2); // Linha 3
-        lcd.print("  Medio");
-    
-        lcd.setCursor(0, 3); // Linha 4
-        lcd.print("  Dificil");
-
-        dificuldade = 0;
-        delay(200);
-      }
-    }
-  }   
+void loop() {
+  // O loop agora está vazio porque a interação ocorre no menu e no modo livre.
 }
