@@ -1,0 +1,86 @@
+#include <Servo.h>
+#include <Arduino.h>
+
+// Definindo os motores (Servos)
+Servo base_horizontal;
+Servo base_vertical;
+Servo mao_vertical;
+Servo mao_horizontal;
+Servo garra;
+
+// Posições dos servos
+int posi_base_horizo = 90;  // Inicializa a posição como o meio (ajuste conforme necessário)
+int posi_base_verti = 90;
+int posi_mao_horizo = 90;
+int posi_mao_verti = 90;
+int posi_garra = 90;
+
+void setup() {
+  Serial.begin(9600);
+
+  // Inicializa os servos
+  base_horizontal.attach(9);  // Pino do servo da base horizontal
+  base_vertical.attach(10);   // Pino do servo da base vertical
+  mao_horizontal.attach(11);  // Pino do servo da mão horizontal
+  mao_vertical.attach(12);    // Pino do servo da mão vertical
+  garra.attach(13);           // Pino do servo da garra
+
+  // Inicializa os servos na posição inicial
+  base_horizontal.write(posi_base_horizo);
+  base_vertical.write(posi_base_verti);
+  mao_horizontal.write(posi_mao_horizo);
+  mao_vertical.write(posi_mao_verti);
+  garra.write(posi_garra);
+
+  Serial.println("Sistema pronto para receber dados.");
+}
+
+void loop() {
+  // Verifica se há dados disponíveis na comunicação serial
+  if (Serial.available() > 0) {
+    String dadosRecebidos = Serial.readStringUntil('\n');
+    
+    // Encontra a posição da vírgula
+    int commaIndex = dadosRecebidos.indexOf(',');
+    
+    // Extrai as duas partes antes e depois da vírgula
+    String firstPart = dadosRecebidos.substring(0, commaIndex);
+    String secondPart = dadosRecebidos.substring(commaIndex + 1);
+    
+    // Converte as duas partes para inteiros
+    int num1 = atoi(firstPart.c_str());
+    int num2 = atoi(secondPart.c_str());
+
+    // Verifica o tipo de comando recebido e ajusta a posição dos servos
+    if (num1 == 1) {
+      // Base Horizontal
+      posi_base_horizo = map(num2, 0, 1023, 0, 360); // Mapeia o valor do potenciômetro para a faixa de movimento do servo
+      base_horizontal.write(posi_base_horizo);
+      Serial.print("Base Horizontal: ");
+      Serial.println(posi_base_horizo);
+    }
+    else if (num1 == 2) {
+      // Base Vertical
+      posi_base_verti = map(num2, 0, 1023, 0, 360);
+      base_vertical.write(posi_base_verti);
+      Serial.print("Base Vertical: ");
+      Serial.println(posi_base_verti);
+    }
+    else if (num1 == 3) {
+      // Mão Horizontal
+      posi_mao_horizo = map(num2, 0, 1023, 0, 360);
+      mao_horizontal.write(posi_mao_horizo);
+      Serial.print("Mão Horizontal: ");
+      Serial.println(posi_mao_horizo);
+    }
+    else if (num1 == 4) {
+      // Mão Vertical
+      posi_mao_verti = map(num2, 0, 1023, 0, 180);
+      mao_vertical.write(posi_mao_verti);
+      Serial.print("Mão Vertical: ");
+      Serial.println(posi_mao_verti);
+    }
+  }
+
+  delay(20); // Delay para não sobrecarregar a comunicação serial
+}
